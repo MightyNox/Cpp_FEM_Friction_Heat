@@ -11,9 +11,22 @@ int main()
 		Input input;
 
 		Grid grid;
-		grid.displayGrid();
+
+		//Display Elements with Nodes ID
+		/*grid.displayGrid();
 
 		system("pause");
+		system("cls");*/
+
+		//Display Element with node id and position
+		//grid.displayElement(1);
+
+
+		//Display Shape Function
+		grid.displayShapeFunction();
+
+		system("pause");
+		system("cls");
 	}
 	catch (FileNotFoundException)
 	{

@@ -13,12 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Exception">
+      <UniqueIdentifier>{c46e5a9f-39d9-4730-a09a-73811be34e70}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Element.cpp">
@@ -30,14 +30,20 @@
     <ClCompile Include="Input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LocalNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="FileNotFoundException.cpp">
+      <Filter>Exception</Filter>
+    </ClCompile>
+    <ClCompile Include="ShapeFunction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Node.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Element.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -47,7 +53,16 @@
     <ClInclude Include="Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LocalNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="FileNotFoundException.h">
+      <Filter>Exception</Filter>
+    </ClInclude>
+    <ClInclude Include="ShapeFunction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

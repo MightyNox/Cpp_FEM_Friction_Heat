@@ -1,16 +1,24 @@
 #pragma once
-#include "Node.h"
+#include "GlobalNode.h"
+#include "LocalNode.h"
+#include "ShapeFunction.h"
+#include <vector>
+#include <array>
 
 class Element
 {
 	unsigned long int id;
-	int * nodesId;
+	std::vector <GlobalNode *> globalNodes;
+	std::vector <LocalNode *> localNodes;
+
 	long double conductionRatio;
 public:
-	Element(unsigned long int id, int * nodesId);
+	Element(unsigned long int id, std::vector<GlobalNode *> &nodes, ShapeFunction shapeFunction);
 	~Element();
 
 	unsigned long int getId();
-	int * getNodesId();
+	std::vector <GlobalNode *> & getNodes();
+	std::vector <LocalNode *> & getLocalNodes();
 };
+
 

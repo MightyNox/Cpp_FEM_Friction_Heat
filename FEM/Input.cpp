@@ -34,7 +34,7 @@ Input::Input()
 
 		getline(file, line, ';');
 		getline(file, line, '\n');
-		conductionRatio = stol(line);
+		ambientTemperature = stol(line);
 
 		file.close();
 	}
