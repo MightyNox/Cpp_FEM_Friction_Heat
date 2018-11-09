@@ -36,10 +36,10 @@
     <ClCompile Include="FileNotFoundException.cpp">
       <Filter>Exception</Filter>
     </ClCompile>
-    <ClCompile Include="ShapeFunction.cpp">
+    <ClCompile Include="GlobalNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GlobalNode.cpp">
+    <ClCompile Include="UniversalElement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,10 +59,10 @@
     <ClInclude Include="FileNotFoundException.h">
       <Filter>Exception</Filter>
     </ClInclude>
-    <ClInclude Include="ShapeFunction.h">
+    <ClInclude Include="GlobalNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GlobalNode.h">
+    <ClInclude Include="UniversalElement.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

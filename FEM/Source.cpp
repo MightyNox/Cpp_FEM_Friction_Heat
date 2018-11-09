@@ -23,7 +23,7 @@ int main()
 
 
 		//Display Shape Function
-		grid.displayShapeFunction();
+		//grid.displayUniversalElement();
 
 		system("pause");
 		system("cls");

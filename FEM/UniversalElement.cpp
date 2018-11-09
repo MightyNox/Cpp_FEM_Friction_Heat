@@ -1,8 +1,8 @@
-#include "ShapeFunction.h"
+#include "UniversalElement.h"
 #include <cmath>
 
 
-ShapeFunction::ShapeFunction()
+UniversalElement::UniversalElement()
 {
 	long double val = 1 / sqrt(3);
 	long double ksi[] = { val*(-1), val, val, val*(-1) };
@@ -28,24 +28,24 @@ ShapeFunction::ShapeFunction()
 }
 
 
-ShapeFunction::~ShapeFunction()
+UniversalElement::~UniversalElement()
 {
 }
 
 
-std::array<std::array<long double, 4>, 4> & ShapeFunction::getN()
+std::array<std::array<long double, 4>, 4> & UniversalElement::getN()
 {
 	return N;
 }
 
 
-std::array<std::array<long double, 4>, 4> & ShapeFunction::getNdEta()
+std::array<std::array<long double, 4>, 4> & UniversalElement::getNdEta()
 {
 	return NdEta;
 }
 
 
-std::array<std::array<long double, 4>, 4> & ShapeFunction::getNdKsi()
+std::array<std::array<long double, 4>, 4> & UniversalElement::getNdKsi()
 {
 	return NdKsi;
 }

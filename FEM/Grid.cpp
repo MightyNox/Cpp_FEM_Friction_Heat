@@ -29,6 +29,9 @@ Grid::Grid()
 	{
 		for (unsigned long int j = 1; j < verticalNodeNumber; j++)
 		{
+			if (j == 2)
+				goto here;
+
 			int nodesId[4];
 			nodesId[0] = j +  verticalNodeNumber * i;
 			nodesId[1] = j +  verticalNodeNumber  * (i+1);
@@ -41,8 +44,13 @@ Grid::Grid()
 				elementNodes.push_back(nodes[nodesId[k] - 1]);
 			}
 
-			elements.push_back(new Element(++id, elementNodes, shapeFunction));
+			elements.push_back(new Element(++id, elementNodes, universalElement));
 		}
+	}
+
+here:
+	{
+
 	}
 }
 
@@ -106,9 +114,9 @@ void Grid::displayElement(unsigned long int id)
 }
 
 
-void Grid::displayShapeFunction()
+void Grid::displayUniversalElement()
 {
-	std::array<std::array<long double, 4>, 4> tmpArray = shapeFunction.getN();
+	std::array<std::array<long double, 4>, 4> tmpArray = universalElement.getN();
 
 	std::cout << std::setw(12) << " Point " 
 			  << std::setw(12) << " N1 " 
@@ -131,7 +139,7 @@ void Grid::displayShapeFunction()
 
 	std::cout << std::endl << std::endl;
 
-	tmpArray = shapeFunction.getNdEta();
+	tmpArray = universalElement.getNdEta();
 
 	std::cout << std::setw(12) << " Point "
 		<< std::setw(12) << " NdEta1 "
@@ -154,7 +162,7 @@ void Grid::displayShapeFunction()
 
 	std::cout << std::endl << std::endl;
 
-	tmpArray = shapeFunction.getNdKsi();
+	tmpArray = universalElement.getNdKsi();
 
 	std::cout << std::setw(12) << " Point "
 		<< std::setw(12) << " NdKsi1 "

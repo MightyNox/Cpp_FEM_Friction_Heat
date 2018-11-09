@@ -1,7 +1,7 @@
 #pragma once
 #include "GlobalNode.h"
 #include "LocalNode.h"
-#include "ShapeFunction.h"
+#include "UniversalElement.h"
 #include <vector>
 #include <array>
 
@@ -10,10 +10,11 @@ class Element
 	unsigned long int id;
 	std::vector <GlobalNode *> globalNodes;
 	std::vector <LocalNode *> localNodes;
+	std::array <long double, 4> globalHeat;
 
 	long double conductionRatio;
 public:
-	Element(unsigned long int id, std::vector<GlobalNode *> &nodes, ShapeFunction shapeFunction);
+	Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, UniversalElement universalELement);
 	~Element();
 
 	unsigned long int getId();

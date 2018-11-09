@@ -2,18 +2,18 @@
 #include "Input.h"
 #include <iostream>
 
-Element::Element(unsigned long int id, std::vector<GlobalNode *> &nodes, ShapeFunction shapeFunction)
+Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, UniversalElement universalElement)
 {
 	//Set element attributes
 	{
 		this->id = id;
 		this->conductionRatio = Input::getConductionRatio();
-		this->globalNodes = nodes;
+		this->globalNodes = globalNodes;
 	}
 
-	//Calculating Global Nodes Into Local Nodes
+	//Convert Global Nodes Into Local Nodes
 	{
-		std::array<std::array<long double, 4>, 4> N = shapeFunction.getN();
+		std::array<std::array<long double, 4>, 4> N = universalElement.getN();
 		long double xToEta;
 		long double yToKsi;
 		for (int i = 0; i < 4; i++)
@@ -23,142 +23,71 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &nodes, ShapeFu
 
 			for (int j = 0; j < 4; j++)
 			{
-				xToEta += N[i][j] * nodes[j]->getX();
-				yToKsi += N[i][j] * nodes[j]->getY();
+				xToEta += N[i][j] * globalNodes[j]->getX();
+				yToKsi += N[i][j] * globalNodes[j]->getY();
 			}
 
 			localNodes.push_back(new LocalNode(xToEta, yToKsi));
 		}
 	}
 
-	//Calculating matrix H
+	//Calculating Heat Matrix
 	{
-		std::array<std::array<long double, 4>, 4> NdEta = shapeFunction.getNdEta();
-		std::array<std::array<long double, 4>, 4> NdKsi = shapeFunction.getNdKsi();
-
-		//Jacobian of Transformation
-		long double jakobian[4][4];
-		for (int i = 0; i < 4; i++)
-		{
-			jakobian[0][i] = 0;
-			jakobian[1][i] = 0;
-			jakobian[2][i] = 0;
-			jakobian[3][i] = 0;
-
-			for (int j = 0; j < 4; j++)
-			{
-				jakobian[0][i] += nodes[j]->getX()*NdEta[j][i];
-				jakobian[1][i] += nodes[j]->getY()*NdEta[j][i];
-				jakobian[2][i] += nodes[j]->getX()*NdKsi[j][i];
-				jakobian[3][i] += nodes[j]->getY()*NdKsi[j][i];
-			}
-
-			/*std::cout << "jakobian[0]["<<i<<"] "<<jakobian[0][i]<< std::endl;
-			std::cout << "jakobian[1][" << i << "] " << jakobian[1][i] << std::endl;
-			std::cout << "jakobian[2][" << i << "] " << jakobian[2][i] << std::endl;
-			std::cout << "jakobian[3][" << i << "] " << jakobian[3][i] << std::endl;*/
-		}
-
-		//det J
-		long double detJ[4];
-		for (int i = 0; i < 4; i++)
-		{
-			detJ[i] = jakobian[0][i] * jakobian[3][i] - jakobian[1][i] * jakobian[2][i];
-			//std::cout <<"detJ["<<i<<"] "<<detJ[i] << std::endl;
-		}
-
-		// odwrocony jakobian
-		long double macierz2[4][4];
-		for (int i = 0; i < 4; i++) //idzie w poziomie
-		{
-			macierz2[0][i] = jakobian[3][i] / detJ[0];
-			macierz2[1][i] = (-1)*jakobian[1][i] / detJ[1];
-			macierz2[2][i] = jakobian[2][i] / detJ[2];
-			macierz2[3][i] = jakobian[0][i] / detJ[3];
-
-			/*std::cout << "macierz2 [0][" << i << "] "<< macierz2[0][i] << std::endl;
-			std::cout << "macierz2 [1][" << i << "] " << macierz2[1][i] << std::endl;
-			std::cout << "macierz2 [2][" << i << "] " << macierz2[2][i] << std::endl;
-			std::cout << "macierz2 [3][" << i << "] " << macierz2[3][i] << std::endl;*/
-		}
-
-		// pochodne funkcji kszta³tu po zmienych globalnych
-		long double pochodnePoX[4][4];
+		std::array<std::array<long double, 4>, 4> localHeat;
 		for (int i = 0; i < 4; i++)
 		{
 			for (int j = 0; j < 4; j++)
 			{
-				pochodnePoX[i][j] = macierz2[0][i] * NdEta[j][i] + macierz2[1][i] * NdKsi[j][i];
-				//std::cout << "pochodne po X[" << i << "]["<<j<<"] " << pochodnePoX[i][j] << std::endl;
+				localHeat[i][j] = 0;
 			}
 		}
 
-		long double pochodnePoY[4][4];
-		for (int i = 0; i < 4; i++)
+		std::array<std::array<long double, 4>, 4> NdEta = universalElement.getNdEta();
+		std::array<std::array<long double, 4>, 4> NdKsi = universalElement.getNdKsi();
+
+		for (int localNodeId = 0; localNodeId < 4; localNodeId++)
 		{
+			//Calculate Jacobian of Transformation Matrix for single node
+			std::array<long double, 4> transformationJacobian = { 0, 0, 0, 0 };
 			for (int j = 0; j < 4; j++)
 			{
-				pochodnePoY[i][j] = macierz2[2][i] * NdEta[j][i] + macierz2[3][i] * NdKsi[j][i];
-				//std::cout << "pochodne po Y[" << i << "][" << j << "] " << pochodnePoY[i][j] << std::endl;
+				transformationJacobian[0] += globalNodes[j]->getX()*NdEta[j][localNodeId];
+				transformationJacobian[1] += globalNodes[j]->getY()*NdEta[j][localNodeId];
+				transformationJacobian[2] += globalNodes[j]->getX()*NdKsi[j][localNodeId];
+				transformationJacobian[3] += globalNodes[j]->getY()*NdKsi[j][localNodeId];
 			}
-		}
 
-		//Mno¿enie wektorów {dN/dx} {dn/dY}
-		long double mnozenieWektorowPoX[4][4][4];
-		long double mnozenieWektorowPoY[4][4][4];
-		for (int i = 0; i < 4; i++) //ktory punkt
-		{
-			for (int j = 0; j < 4; j++) //pion
+			//Calculate detJ - determinant of Jacobian of Transformation Matrix
+			long double detJ = transformationJacobian[0] * transformationJacobian[3] - transformationJacobian[1] * transformationJacobian[2];
+
+			//Reversed Matrix of Jacobian of Transformation - inverted matrix / detJ
+			std::array<long double, 4> reversedTransformationJacobian;
+			reversedTransformationJacobian[0] = transformationJacobian[3] / detJ;
+			reversedTransformationJacobian[1] = (-1)*transformationJacobian[1] / detJ;
+			reversedTransformationJacobian[2] = transformationJacobian[2] / detJ;
+			reversedTransformationJacobian[3] = transformationJacobian[0] / detJ;
+
+			//Calculate derivative N / derivative x
+			std::array<long double, 4> dNdX;
+			for (int j = 0; j < 4; j++)
 			{
-				for (int k = 0; k < 4; k++) //poziom
+				dNdX[j] = reversedTransformationJacobian[0] * NdEta[j][localNodeId] + reversedTransformationJacobian[1] * NdKsi[j][localNodeId];
+			}
+
+			//Calculate derivative N / derivative y
+			std::array<long double, 4> dNdY;
+			for (int j = 0; j < 4; j++)
+			{
+				dNdY[j] = reversedTransformationJacobian[2] * NdEta[j][localNodeId] + reversedTransformationJacobian[3] * NdKsi[j][localNodeId];
+			}
+
+			//Multiplication and Sum of vectors * determinant of Jacobian of Transformation Matrix * conductivity - dN/dx * dN/dx + dN/dy * dN/dy * detJ * k
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
 				{
-					mnozenieWektorowPoX[i][j][k] = pochodnePoX[i][j] * pochodnePoX[i][k];
-					mnozenieWektorowPoY[i][j][k] = pochodnePoY[i][j] * pochodnePoY[i][k];
-					//std::cout << "Punkt "<<i<<" mnozenie wektorow po X[" << j << "][" << k << "] " << mnozenieWektorowPoX[i][j][k] << std::endl;
-					//std::cout << "Punkt "<<i<<" mnozenie wektorow po Y[" << j << "][" << k << "] " << mnozenieWektorowPoY[i][j][k] << std::endl;
+					localHeat[i][j] += (dNdX[j] * dNdX[i] + dNdY[j] * dNdY[i])*detJ * conductionRatio;
 				}
-			}
-		}
-
-		//Pomno¿one wektory mno¿ymy przez wyznacznik
-		for (int i = 0; i < 4; i++) //ktory punkt
-		{
-			for (int j = 0; j < 4; j++) //pion
-			{
-				for (int k = 0; k < 4; k++) //poziom
-				{
-					mnozenieWektorowPoX[i][j][k] *= detJ[i];
-					mnozenieWektorowPoY[i][j][k] *= detJ[i];
-
-					//std::cout << "Punkt "<<i<<" Wyznacznik[" << j << "][" << k << "] " << mnozenieWektorowPoX[i][j][k] << std::endl;
-					//std::cout << "Punkt "<<i<<" Wyznacznik[" << j << "][" << k << "] " << mnozenieWektorowPoY[i][j][k] << std::endl;
-				}
-			}
-		}
-
-		//suma wektórów * conductivity
-		long double tmp[4][4][4];
-		for (int i = 0; i < 4; i++) //ktory punkt
-		{
-			for (int j = 0; j < 4; j++) //pion
-			{
-				for (int k = 0; k < 4; k++) //poziom
-				{
-					tmp[i][j][k] = (mnozenieWektorowPoX[i][j][k] + mnozenieWektorowPoY[i][j][k])*conductionRatio;
-					//std::cout << "punkt " << i << " indeks [" << j << "][" << k << "] " << tmp[i][j][k] << std::endl;
-				}
-			}
-		}
-
-		//H
-		long double H[4][4];
-		for (int i = 0; i < 4; i++) //ktory punkt
-		{
-			for (int j = 0; j < 4; j++) //pion
-			{
-				H[i][j] = tmp[0][i][j] + tmp[1][i][j] + tmp[2][i][j] + tmp[3][i][j];
-
-				//std::cout << "H [" << i << "][" << j << "] " << H[i][j] << std::endl;
 			}
 		}
 	}

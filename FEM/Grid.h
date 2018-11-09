@@ -1,14 +1,14 @@
 #pragma once
 #include "GlobalNode.h"
 #include "Element.h"
-#include "ShapeFunction.h"
+#include "UniversalElement.h"
 #include <vector>
 
 class Grid
 {
 	std::vector<GlobalNode*> nodes;
 	std::vector<Element*> elements;
-	ShapeFunction shapeFunction;
+	UniversalElement universalElement;
 
 public:
 	Grid();
@@ -16,6 +16,6 @@ public:
 
 	void displayGrid();
 	void displayElement(unsigned long int id);
-	void displayShapeFunction();
+	void displayUniversalElement();
 };
 
