@@ -6,32 +6,57 @@
 
 Grid::Grid()
 {
-	unsigned long int verticalNodeNumber = Input::getVerticalNodeNumber();
-	unsigned long int horizontalNodeNumber = Input::getHorizontalNodeNumber();
-	long double nodeHight = Input::getGridHight()/ (verticalNodeNumber -1);
-	long double nodeWidth = Input::getGridWidth() / (Input::getHorizontalNodeNumber()-1);
+	//Load Input
+	Input input;
+	unsigned long int verticalNodeNumber = input.getVerticalNodeNumber();
+	unsigned long int horizontalNodeNumber = input.getHorizontalNodeNumber();
+	long double nodeHight = input.getGridHight()/ (verticalNodeNumber -1);
+	long double nodeWidth = input.getGridWidth() / (horizontalNodeNumber -1);
 
-	//Creating All Nodes
+	//Create Global Nodes
 	unsigned int id = 0;
+	bool onBoundHorizontal;
+	bool onBoundVertical;
 	for (unsigned long int i = 0; i < horizontalNodeNumber; i++)
 	{
+		//If the global node is on the left or the right edge
+		if (i == 0 || i == horizontalNodeNumber - 1)
+		{
+			onBoundHorizontal = true;
+		}
+		else
+		{
+			onBoundHorizontal = false;
+		}
+
 		for (unsigned long int j = 0; j < verticalNodeNumber; j++)
 		{
-			nodes.push_back(new GlobalNode(++id, i*nodeWidth, j*nodeHight));
+			//If the global node is on the left or the right edge
+			if (onBoundHorizontal == true)
+			{
+				onBoundVertical = true;
+			}
+			//If the global node is neither on the left nor right edge, check if it is on top or bottom edge
+			else if (onBoundHorizontal == false && (j == 0 || j == verticalNodeNumber - 1))
+			{
+				onBoundVertical = true;
+			}
+			else
+			{
+				onBoundVertical = false;
+			}
+
+			nodes.push_back(new GlobalNode(++id, i*nodeWidth, j*nodeHight, onBoundVertical, &input));
 		}
 	}
 
 
-	//Creating All Elements and Set Their Nodes
+	//Create Elements and Set Their Global Nodes
 	id = 0;
-
 	for (unsigned long int i = 0; i < horizontalNodeNumber - 1; i++)
 	{
 		for (unsigned long int j = 1; j < verticalNodeNumber; j++)
 		{
-			if (j == 2)
-				goto here;
-
 			int nodesId[4];
 			nodesId[0] = j +  verticalNodeNumber * i;
 			nodesId[1] = j +  verticalNodeNumber  * (i+1);
@@ -44,13 +69,8 @@ Grid::Grid()
 				elementNodes.push_back(nodes[nodesId[k] - 1]);
 			}
 
-			elements.push_back(new Element(++id, elementNodes, universalElement));
+			elements.push_back(new Element(++id, elementNodes, universalElement, &input));
 		}
-	}
-
-here:
-	{
-
 	}
 }
 
@@ -76,7 +96,7 @@ void Grid::displayGrid()
 	for (unsigned long int i = 0; i < elements.size(); i++)
 	{
 		std::cout<<elements[i]->getId();
-		std::vector<GlobalNode *> nodes = elements[i]->getNodes();
+		std::vector<GlobalNode *> nodes = elements[i]->getGlobalNodes();
 		std::cout<<" --> ";
 		std::cout << nodes[0]->getId() << ", ";
 		std::cout << nodes[1]->getId() << ", ";
@@ -98,7 +118,7 @@ void Grid::displayElement(unsigned long int id)
 
 	Element * element = elements[id-1];
 	
-	std::vector<GlobalNode *> globalNodes = element->getNodes();
+	std::vector<GlobalNode *> globalNodes = element->getGlobalNodes();
 	std::cout << "Global Node "<< globalNodes[0]->getId() <<" --> " << "x: " << globalNodes[0]->getX() << ", y: " << globalNodes[0]->getY() << std::endl;
 	std::cout << "Global Node " << globalNodes[1]->getId() << " --> " << "x: " << globalNodes[1]->getX() << ", y: " << globalNodes[1]->getY() << std::endl;
 	std::cout << "Global Node " << globalNodes[2]->getId() << " --> " << "x: " << globalNodes[2]->getX() << ", y: " << globalNodes[2]->getY() << std::endl;
@@ -139,7 +159,7 @@ void Grid::displayUniversalElement()
 
 	std::cout << std::endl << std::endl;
 
-	tmpArray = universalElement.getNdEta();
+	tmpArray = universalElement.getdNdEta();
 
 	std::cout << std::setw(12) << " Point "
 		<< std::setw(12) << " NdEta1 "
@@ -162,7 +182,7 @@ void Grid::displayUniversalElement()
 
 	std::cout << std::endl << std::endl;
 
-	tmpArray = universalElement.getNdKsi();
+	tmpArray = universalElement.getdNdKsi();
 
 	std::cout << std::setw(12) << " Point "
 		<< std::setw(12) << " NdKsi1 "

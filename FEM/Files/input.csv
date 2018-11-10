@@ -1,6 +1,7 @@
-Grid Hight (H);1;40
-Grid Width (L);1;30
-Count Of Vertical Nodes (nH);41;6
-Count Of Horizontal Nodes (nL);41;4
-Conduction Ratio;30;30
-Ambient Temperature;20;20
+Grid Hight (H);1;;40
+Grid Width (L);1;;30
+Count Of Vertical Nodes (nH);41;;6
+Count Of Horizontal Nodes (nL);41;;4
+Conduction Ratio (k);30;;30
+Ambient Temperature (t0);20;;20
+Convection;25;;

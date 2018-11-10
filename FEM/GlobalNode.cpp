@@ -2,12 +2,13 @@
 #include "Input.h"
 
 
-GlobalNode::GlobalNode(unsigned long int id, long double x, long double y)
+GlobalNode::GlobalNode(unsigned long int id, long double x, long double y, bool onBound, Input *input)
 {
 	this->id = id;
 	this->x = x;
 	this->y = y;
-	this->t = Input::getTemperature();
+	this->t = input->getTemperature();
+	this->onBound = onBound;
 }
 
 
@@ -31,4 +32,10 @@ long double GlobalNode::getX()
 long double GlobalNode::getY()
 {
 	return y;
+}
+
+
+bool GlobalNode::getOnBound()
+{
+	return onBound;
 }

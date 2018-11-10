@@ -1,15 +1,12 @@
-#include "Input.h"
-#include "Element.h"
 #include "Grid.h"
 #include "FileNotFoundException.h"
+#include <iostream>
 
 
 int main()
 {
 	try
 	{
-		Input input;
-
 		Grid grid;
 
 		//Display Elements with Nodes ID
@@ -30,6 +27,9 @@ int main()
 	}
 	catch (FileNotFoundException)
 	{
+		std::cout << "File Not Found!" << std::endl;
+		system("pause");
+
 		return 1;
 	}
 

@@ -36,6 +36,10 @@ Input::Input()
 		getline(file, line, '\n');
 		ambientTemperature = stol(line);
 
+		getline(file, line, ';');
+		getline(file, line, '\n');
+		convectionRatio = stold(line);
+
 		file.close();
 	}
 }
@@ -82,9 +86,7 @@ long double Input::getConductionRatio()
 }
 
 
-long double Input::gridHight;
-long double Input::gridWidth;
-unsigned long int Input::verticalNodeNumber;
-unsigned long int Input::horizontalNodeNumber;
-long double Input::conductionRatio;
-long double Input::ambientTemperature;
+long double Input::getConvectionRatio()
+{
+	return convectionRatio;
+}
