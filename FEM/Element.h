@@ -11,9 +11,9 @@ class Element
 	unsigned long int id;
 	std::vector <GlobalNode *> globalNodes;
 	std::vector <LocalNode *> localNodes;
-	std::array <long double, 4> globalHeat;
-	long double conductionRatio;
-	long double convectionRatio;
+	std::array < std::array <long double, 4>, 4> localH;
+	std::array < std::array <long double, 4>, 4> localC;
+	std::array <long double, 4> localP;
 public:
 	Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, UniversalElement universalELement, Input *input);
 	~Element();
@@ -21,6 +21,9 @@ public:
 	unsigned long int getId();
 	std::vector <GlobalNode *> & getGlobalNodes();
 	std::vector <LocalNode *> & getLocalNodes();
+	std::array<std::array<long double, 4>, 4> & getLocalH();
+	std::array<std::array<long double, 4>, 4> & getLocalC();
+	std::array <long double, 4> & getLocalP();
 };
 
 

@@ -22,6 +22,8 @@ int main()
 		//Display Shape Function
 		//grid.displayUniversalElement();
 
+		grid.calculate();
+
 		system("pause");
 		system("cls");
 	}

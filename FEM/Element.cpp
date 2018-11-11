@@ -1,20 +1,20 @@
 #include "Element.h"
 #include "Input.h"
-#include <iostream>
 
 Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, UniversalElement universalElement, Input *input)
 {
 	//Set element attributes
 	{
 		this->id = id;
-		this->conductionRatio = input->getConductionRatio();
-		this->convectionRatio = input->getConvectionRatio();
 		this->globalNodes = globalNodes;
 	}
 
+	std::array<std::array<long double, 4>, 4> N = universalElement.getN();
+	std::array<std::array<long double, 4>, 4> NSurface = universalElement.getNSurface();
+	std::array<long double, 4> detJ;
+
 	//Convert Global Nodes Into Local Nodes
 	{
-		std::array<std::array<long double, 4>, 4> N = universalElement.getN();
 		long double xToEta;
 		long double yToKsi;
 		for (int i = 0; i < 4; i++)
@@ -32,14 +32,19 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 		}
 	}
 
-	//Calculate Heat Matrix
+	long double specificHeat = input->getSpecificHeat();
+	long double density = input->getDensity();
+	long double conductionRatio = input->getConductionRatio();
+	long double convectionRatio = input->getConvectionRatio();
+	long double ambientTemperature = input->getAmbientTemperature();
+
+	//Calculate matrix H
 	{
-		std::array<std::array<long double, 4>, 4> localHeat;
 		for (int i = 0; i < 4; i++)
 		{
 			for (int j = 0; j < 4; j++)
 			{
-				localHeat[i][j] = 0;
+				localH[i][j] = 0;
 			}
 		}
 
@@ -63,23 +68,23 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 				}
 
 				//Calculate detJ - determinant of Jacobian of Transformation Matrix
-				long double detJ = transformationJacobian[0] * transformationJacobian[3] - transformationJacobian[1] * transformationJacobian[2];
+				detJ[i] = transformationJacobian[0] * transformationJacobian[3] - transformationJacobian[1] * transformationJacobian[2];
 
 				//Reversed Matrix of Jacobian of Transformation - inverted matrix / detJ
 				std::array<long double, 4> reversedTransformationJacobian;
-				reversedTransformationJacobian[0] = transformationJacobian[3] / detJ;
-				reversedTransformationJacobian[1] = (-1)*transformationJacobian[1] / detJ;
-				reversedTransformationJacobian[2] = transformationJacobian[2] / detJ;
-				reversedTransformationJacobian[3] = transformationJacobian[0] / detJ;
+				reversedTransformationJacobian[0] = transformationJacobian[3] / detJ[i];
+				reversedTransformationJacobian[1] = (-1)*transformationJacobian[1] / detJ[i];
+				reversedTransformationJacobian[2] = transformationJacobian[2] / detJ[i];
+				reversedTransformationJacobian[3] = transformationJacobian[0] / detJ[i];
 
-				//Calculate derivative N / derivative x
+				//Calculate dN/dx
 				std::array<long double, 4> dNdX;
 				for (int j = 0; j < 4; j++)
 				{
 					dNdX[j] = reversedTransformationJacobian[0] * NdEta[j][i] + reversedTransformationJacobian[1] * NdKsi[j][i];
 				}
 
-				//Calculate derivative N / derivative y
+				//Calculate dN/dy
 				std::array<long double, 4> dNdY;
 				for (int j = 0; j < 4; j++)
 				{
@@ -91,7 +96,7 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 				{
 					for (int k = 0; k < 4; k++)
 					{
-						localHeat[j][k] += (dNdX[k] * dNdX[j] + dNdY[k] * dNdY[j])*detJ * conductionRatio;
+						localH[j][k] += (dNdX[k] * dNdX[j] + dNdY[k] * dNdY[j])*detJ[i] * conductionRatio;
 					}
 				}
 			}
@@ -99,19 +104,13 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 
 		//Calculate second part of Heat Matrix
 		{
-			std::array<std::array<std::array<long double, 4>, 2>, 4> NSurface = universalElement.getNSurface();
 			std::array < std::array<long double, 4>, 4> matrixN;
 			std::array < std::array<long double, 4>, 4>  matrixNT;
-			int onBoundCounter = 0;
 			int j;
 			//Calculate second part of Matrix H for every surface
 			//i - surfaceId
-			for (int i = 0; i < 1; i++)
+			for (int i = 0; i < 4; i++)
 			{
-				//There can be only 2 Boundary Conditions
-				if (onBoundCounter == 2)
-					break;
-
 				//Current and the next index 4 goes into 0
 				j = i + 1;
 				if (j == 4)
@@ -126,10 +125,6 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 				{
 					continue;
 				}
-				else
-				{
-					onBoundCounter++;
-				}
 
 				//Length of the bound - sqrt(P1^2 + P2^2)
 				long double sideLength = 0;
@@ -138,7 +133,7 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 				sideLength = sqrt(sideLength);
 
 				//Calculate detJ - determinant of Jacobian
-				long double detJ = sideLength / 2.0;
+				long double localDetJ = sideLength / 2.0;
 
 				//Fill the arrays
 				for (int i = 0; i < 4; i++)
@@ -151,10 +146,10 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 				}
 
 				//Calculate matrix N
-				matrixN[i][i] = NSurface[i][0][i] * NSurface[i][0][i] * convectionRatio; //Nx * Nx
-				matrixN[i][j] = NSurface[i][0][i] * NSurface[i][0][j] * convectionRatio; //Nx * Ny
+				matrixN[i][i] = NSurface[i][i] * NSurface[i][i] * convectionRatio; //Nx * Nx
+				matrixN[i][j] = NSurface[i][i] * NSurface[i][j] * convectionRatio; //Nx * Ny
 				matrixN[j][i] = matrixN[i][j]; //Ny * Nx - it's the same as Nx * Ny
-				matrixN[j][j] = NSurface[i][0][j] * NSurface[i][0][j] * convectionRatio; //Ny * Ny
+				matrixN[j][j] = NSurface[i][j] * NSurface[i][j] * convectionRatio; //Ny * Ny
 
 				//Transpose matrix N
 				matrixNT[i][i] = matrixN[j][j];
@@ -164,15 +159,75 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 
 				for (int k = 0; k < 4; k++)
 				{
-					for (int j = 0; j < 4; j++)
+					for (int l = 0; l < 4; l++)
 					{
-						//Calculate {N}{NT}*convection*detJ
-						matrixN[k][j] = (matrixN[k][j] + matrixNT[k][j]) * detJ;
-
-						//Add values to the localHeat matrix
-						localHeat[k][j] += matrixN[k][j];
+						//Calculate {N}{NT}*convection*detJ and Add values to the localHeat matrix
+						localH[k][l] += (matrixN[k][l] + matrixNT[k][l]) * localDetJ;
 					}
 				}
+			}
+		}
+	}
+	
+	//Calculate matrix C
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				localC[i][j] = 0;
+			}
+		}
+
+		//i - the integration point
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				for (int k = 0; k < 4; k++)
+				{
+					localC[j][k] += N[i][j] * N[i][k] * density * specificHeat *detJ[i];
+				}
+			}
+		}
+	}
+
+	//Calculate vector P
+	{
+		localP.fill(0);
+
+		int j;
+		//i - surfaceId
+		for (int i = 0; i < 4; i++)
+		{
+			//Current and the next index 4 goes into 0
+			j = i + 1;
+			if (j == 4)
+			{
+				j = 0;
+			}
+
+			//Check if two points are on the same bound
+			bool onBound1 = globalNodes[i]->getOnBound();
+			bool onBound2 = globalNodes[j]->getOnBound();
+			if (onBound1 != true || onBound2 != true)
+			{
+				continue;
+			}
+
+
+			long double sideLength = 0;
+			sideLength += (globalNodes[i]->getX() - globalNodes[j]->getX()) * (globalNodes[i]->getX() - globalNodes[j]->getX());
+			sideLength += (globalNodes[i]->getY() - globalNodes[j]->getY()) * (globalNodes[i]->getY() - globalNodes[j]->getY());
+			sideLength = sqrt(sideLength);
+
+			long double localDetJ = sideLength / 2.0;
+
+
+			for (int l = 0; l < 4; l++)
+			{
+				localP[i] += NSurface[i][l] * ambientTemperature*convectionRatio*localDetJ;
+				localP[j] += NSurface[i][l] * ambientTemperature*convectionRatio*localDetJ;
 			}
 		}
 	}
@@ -204,4 +259,22 @@ std::vector<GlobalNode *> & Element::getGlobalNodes()
 std::vector<LocalNode *> & Element::getLocalNodes()
 {
 	return localNodes;
+}
+
+
+std::array<std::array<long double, 4>, 4> & Element::getLocalH()
+{
+	return localH;
+}
+
+
+std::array<std::array<long double, 4>, 4> & Element::getLocalC()
+{
+	return localC;
+}
+
+
+std::array<long double, 4> & Element::getLocalP()
+{
+	return localP;
 }

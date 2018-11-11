@@ -7,7 +7,7 @@ GlobalNode::GlobalNode(unsigned long int id, long double x, long double y, bool 
 	this->id = id;
 	this->x = x;
 	this->y = y;
-	this->t = input->getTemperature();
+	this->t = input->getInitialTemperature();
 	this->onBound = onBound;
 }
 
@@ -35,7 +35,19 @@ long double GlobalNode::getY()
 }
 
 
+long double GlobalNode::getT()
+{
+	return t;
+}
+
+
 bool GlobalNode::getOnBound()
 {
 	return onBound;
+}
+
+
+void GlobalNode::setT(long double t)
+{
+	this->t = t;
 }

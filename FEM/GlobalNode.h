@@ -15,6 +15,9 @@ public:
 	unsigned long int getId();
 	long double getX();
 	long double getY();
+	long double getT();
 	bool getOnBound();
+
+	void setT(long double t);
 };
 

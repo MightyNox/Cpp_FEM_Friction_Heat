@@ -8,8 +8,8 @@ UniversalElement::UniversalElement()
 	long double ksi[] = { val*(-1), val, val, val*(-1) };
 	long double eta[] = { val*(-1), val*(-1), val, val };
 
-	long double ksiSurface[4][2] = { {-val, val}, {1,1}, {val, -val}, {-1,-1} };
-	long double etaSurface[4][2] = { {-1, -1}, {-val, val}, {1, 1}, {val, -val} };
+	long double ksiSurface[] = { -val, 1, val, -1 };
+	long double etaSurface[] = { -1, -val, 1, val };
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -19,15 +19,11 @@ UniversalElement::UniversalElement()
 		N[i][2] = 0.25*(1 + ksi[i])*(1 + eta[i]);
 		N[i][3] = 0.25*(1 - ksi[i])*(1 + eta[i]);
 
-		//Calculate N1, N2, N3, N4 in Surface for all nodes
-		for (int j = 0; j < 2; j++)
-		{
-			//[surface][node][Ni]
-			NSurface[i][j][0] = 0.25*(1 - ksiSurface[i][j])*(1 - etaSurface[i][j]);
-			NSurface[i][j][1] = 0.25*(1 + ksiSurface[i][j])*(1 - etaSurface[i][j]);
-			NSurface[i][j][2] = 0.25*(1 + ksiSurface[i][j])*(1 + etaSurface[i][j]);
-			NSurface[i][j][3] = 0.25*(1 - ksiSurface[i][j])*(1 + etaSurface[i][j]);
-		}
+		//Calculate N1, N2, N3, N4 in Surface
+		NSurface[i][0] = 0.25*(1 - ksiSurface[i])*(1 - etaSurface[i]);
+		NSurface[i][1] = 0.25*(1 + ksiSurface[i])*(1 - etaSurface[i]);
+		NSurface[i][2] = 0.25*(1 + ksiSurface[i])*(1 + etaSurface[i]);
+		NSurface[i][3] = 0.25*(1 - ksiSurface[i])*(1 + etaSurface[i]);
 
 		//Calculade dN1/dEta, dN2/dEta, dN3/dEta, dN4/dEta for all nodes
 		dNdEta[0][i] = (-0.25)*(1 - eta[i]);
@@ -55,7 +51,7 @@ std::array<std::array<long double, 4>, 4> & UniversalElement::getN()
 }
 
 
-std::array<std::array<std::array<long double, 4>, 2>, 4>  & UniversalElement::getNSurface()
+std::array<std::array<long double, 4>, 4>  & UniversalElement::getNSurface()
 {
 	return NSurface;
 }
