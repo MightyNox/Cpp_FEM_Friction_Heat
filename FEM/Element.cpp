@@ -1,7 +1,7 @@
 #include "Element.h"
 #include "Input.h"
 
-Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, UniversalElement universalElement, Input *input)
+Element::Element(unsigned long int id, std::array<GlobalNode *, 4> &globalNodes, UniversalElement universalElement, Input *input)
 {
 	//Set element attributes
 	{
@@ -28,7 +28,7 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 				yToKsi += N[i][j] * globalNodes[j]->getY();
 			}
 
-			localNodes.push_back(new LocalNode(xToEta, yToKsi));
+			localNodes[i]=(new LocalNode(xToEta, yToKsi));
 		}
 	}
 
@@ -50,24 +50,23 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 
 		//Calculate first part of Heat Matrix
 		{
-			std::array<std::array<long double, 4>, 4> NdEta = universalElement.getdNdEta();
-			std::array<std::array<long double, 4>, 4> NdKsi = universalElement.getdNdKsi();
+			std::array<std::array<long double, 4>, 4> dNdKsi = universalElement.getdNdKsi();
+			std::array<std::array<long double, 4>, 4> dNdEta = universalElement.getdNdEta();
 
 			//Calculate first part of Matrix H for every Node
-			//i - localNodeId
 			for (int i = 0; i < 4; i++)
 			{
-				//Calculate Jacobian of Transformation Matrix for single node
+				//Calculate Transformation Matrix for single node
 				std::array<long double, 4> transformationJacobian = { 0, 0, 0, 0 };
 				for (int j = 0; j < 4; j++)
 				{
-					transformationJacobian[0] += globalNodes[j]->getX()*NdEta[j][i];
-					transformationJacobian[1] += globalNodes[j]->getY()*NdEta[j][i];
-					transformationJacobian[2] += globalNodes[j]->getX()*NdKsi[j][i];
-					transformationJacobian[3] += globalNodes[j]->getY()*NdKsi[j][i];
+					transformationJacobian[0] += globalNodes[j]->getX()*dNdKsi[j][i];
+					transformationJacobian[1] += globalNodes[j]->getY()*dNdKsi[j][i];
+					transformationJacobian[2] += globalNodes[j]->getX()*dNdEta[j][i];
+					transformationJacobian[3] += globalNodes[j]->getY()*dNdEta[j][i];
 				}
 
-				//Calculate detJ - determinant of Jacobian of Transformation Matrix
+				//Calculate detJ - transformation jacobian - determinant of Transformation Matrix
 				detJ[i] = transformationJacobian[0] * transformationJacobian[3] - transformationJacobian[1] * transformationJacobian[2];
 
 				//Reversed Matrix of Jacobian of Transformation - inverted matrix / detJ
@@ -81,14 +80,14 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 				std::array<long double, 4> dNdX;
 				for (int j = 0; j < 4; j++)
 				{
-					dNdX[j] = reversedTransformationJacobian[0] * NdEta[j][i] + reversedTransformationJacobian[1] * NdKsi[j][i];
+					dNdX[j] = reversedTransformationJacobian[0] * dNdKsi[j][i] + reversedTransformationJacobian[1] * dNdEta[j][i];
 				}
 
 				//Calculate dN/dy
 				std::array<long double, 4> dNdY;
 				for (int j = 0; j < 4; j++)
 				{
-					dNdY[j] = reversedTransformationJacobian[2] * NdEta[j][i] + reversedTransformationJacobian[3] * NdKsi[j][i];
+					dNdY[j] = reversedTransformationJacobian[2] * dNdKsi[j][i] + reversedTransformationJacobian[3] * dNdEta[j][i];
 				}
 
 				//Multiplication and Sum of vectors * determinant of Jacobian of Transformation Matrix * conductivity - dN/dx * dN/dx + dN/dy * dN/dy * detJ * k
@@ -107,8 +106,8 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 			std::array < std::array<long double, 4>, 4> matrixN;
 			std::array < std::array<long double, 4>, 4>  matrixNT;
 			int j;
+
 			//Calculate second part of Matrix H for every surface
-			//i - surfaceId
 			for (int i = 0; i < 4; i++)
 			{
 				//Current and the next index 4 goes into 0
@@ -126,14 +125,11 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 					continue;
 				}
 
-				//Length of the bound - sqrt(P1^2 + P2^2)
-				long double sideLength = 0;
-				sideLength += (globalNodes[i]->getX() - globalNodes[j]->getX()) * (globalNodes[i]->getX() - globalNodes[j]->getX());
-				sideLength += (globalNodes[i]->getY() - globalNodes[j]->getY()) * (globalNodes[i]->getY() - globalNodes[j]->getY());
-				sideLength = sqrt(sideLength);
-
-				//Calculate detJ - determinant of Jacobian
-				long double localDetJ = sideLength / 2.0;
+				//Calculate jacobian of transformation - length of the bound - sqrt(P1^2 + P2^2)
+				long double localDetJ = 0;
+				localDetJ += (globalNodes[i]->getX() - globalNodes[j]->getX()) * (globalNodes[i]->getX() - globalNodes[j]->getX());
+				localDetJ += (globalNodes[i]->getY() - globalNodes[j]->getY()) * (globalNodes[i]->getY() - globalNodes[j]->getY());
+				localDetJ = sqrt(localDetJ) * 0.5;
 
 				//Fill the arrays
 				for (int i = 0; i < 4; i++)
@@ -146,10 +142,10 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 				}
 
 				//Calculate matrix N
-				matrixN[i][i] = NSurface[i][i] * NSurface[i][i] * convectionRatio; //Nx * Nx
-				matrixN[i][j] = NSurface[i][i] * NSurface[i][j] * convectionRatio; //Nx * Ny
+				matrixN[i][i] = NSurface[i][i] * NSurface[i][i]; //Nx * Nx
+				matrixN[i][j] = NSurface[i][i] * NSurface[i][j]; //Nx * Ny
 				matrixN[j][i] = matrixN[i][j]; //Ny * Nx - it's the same as Nx * Ny
-				matrixN[j][j] = NSurface[i][j] * NSurface[i][j] * convectionRatio; //Ny * Ny
+				matrixN[j][j] = NSurface[i][j] * NSurface[i][j]; //Ny * Ny
 
 				//Transpose matrix N
 				matrixNT[i][i] = matrixN[j][j];
@@ -162,7 +158,7 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 					for (int l = 0; l < 4; l++)
 					{
 						//Calculate {N}{NT}*convection*detJ and Add values to the localHeat matrix
-						localH[k][l] += (matrixN[k][l] + matrixNT[k][l]) * localDetJ;
+						localH[k][l] += (matrixN[k][l] + matrixNT[k][l]) * convectionRatio * localDetJ;
 					}
 				}
 			}
@@ -216,12 +212,11 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 			}
 
 
-			long double sideLength = 0;
-			sideLength += (globalNodes[i]->getX() - globalNodes[j]->getX()) * (globalNodes[i]->getX() - globalNodes[j]->getX());
-			sideLength += (globalNodes[i]->getY() - globalNodes[j]->getY()) * (globalNodes[i]->getY() - globalNodes[j]->getY());
-			sideLength = sqrt(sideLength);
-
-			long double localDetJ = sideLength / 2.0;
+			//Calculate jacobian of transformation - length of the bound - sqrt(P1^2 + P2^2)
+			long double localDetJ = 0;
+			localDetJ += (globalNodes[i]->getX() - globalNodes[j]->getX()) * (globalNodes[i]->getX() - globalNodes[j]->getX());
+			localDetJ += (globalNodes[i]->getY() - globalNodes[j]->getY()) * (globalNodes[i]->getY() - globalNodes[j]->getY());
+			localDetJ = sqrt(localDetJ) * 0.5;
 
 
 			for (int l = 0; l < 4; l++)
@@ -236,11 +231,8 @@ Element::Element(unsigned long int id, std::vector<GlobalNode *> &globalNodes, U
 
 Element::~Element()
 {
-	while (!localNodes.empty())
-	{
-		delete localNodes.back();
-		localNodes.pop_back();
-	}
+	for (int i = 0; i < 4; i++)
+		delete localNodes[i];
 }
 
 
@@ -250,13 +242,13 @@ unsigned long int Element::getId()
 }
 
 
-std::vector<GlobalNode *> & Element::getGlobalNodes()
+std::array<GlobalNode *, 4> & Element::getGlobalNodes()
 {
 	return globalNodes;
 }
 
 
-std::vector<LocalNode *> & Element::getLocalNodes()
+std::array<LocalNode *, 4> & Element::getLocalNodes()
 {
 	return localNodes;
 }

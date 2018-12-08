@@ -72,6 +72,11 @@ Input::Input()
 		getline(file, line, '\n');
 		density = stold(line);
 
+		//Gauss Seidel Iterations Number
+		getline(file, line, ';');
+		getline(file, line, '\n');
+		iterationsNumber = stoul(line);
+
 		file.close();
 	}
 }
@@ -153,3 +158,8 @@ long double Input::getDensity()
 	return density;
 }
 
+
+unsigned long int Input::getIterationsNumber()
+{
+	return iterationsNumber;
+}

@@ -17,6 +17,7 @@ class Input
 	long double specificHeat; //c
 	long double conductionRatio; //k
 	long double density; //rho
+	unsigned long int iterationsNumber;
 public:
 	Input();
 	~Input();
@@ -33,4 +34,5 @@ public:
 	long double getSpecificHeat();
 	long double getConductionRatio();
 	long double getDensity();
+	unsigned long int getIterationsNumber();
 };

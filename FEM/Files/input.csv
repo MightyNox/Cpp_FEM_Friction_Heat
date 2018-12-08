@@ -10,3 +10,4 @@ Count Of Horizontal Nodes (nL);4
 Specific Heat ( c);700
 Conduction Ratio (k);25
 Density (ro);7800
+Gauss Seidel Iterations Number;100000
