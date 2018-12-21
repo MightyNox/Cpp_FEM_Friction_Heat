@@ -1,6 +1,7 @@
 #include "Input.h"
 #include "FileNotFoundException.h"
 #include <string>
+#include <iostream>
 
 Input::Input()
 {
@@ -77,8 +78,41 @@ Input::Input()
 		getline(file, line, '\n');
 		iterationsNumber = stoul(line);
 
+		//Friction Ratio
+		getline(file, line, ';');
+		getline(file, line, '\n');
+		frictionRatio = stold(line);
+
+		//Earth Acceleration
+		getline(file, line, ';');
+		getline(file, line, '\n');
+		earthAcceleration = stold(line);
+
+		//Cube Height
+		getline(file, line, ';');
+		getline(file, line, '\n');
+		cubeHeight = stold(line);
+
+		//Cube Area
+		getline(file, line, ';');
+		getline(file, line, '\n');
+		cubeArea = stold(line);
+
+		//Velocity
+		getline(file, line, ';');
+		getline(file, line, '\n');
+		velocity = stold(line);
+
+		//Angle
+		getline(file, line, ';');
+		getline(file, line, '\n');
+		angle = stold(line);
+
 		file.close();
 	}
+
+	densityStream = frictionRatio * density  * cubeHeight * earthAcceleration * velocity;
+	
 }
 
 
@@ -162,4 +196,46 @@ long double Input::getDensity()
 unsigned long int Input::getIterationsNumber()
 {
 	return iterationsNumber;
+}
+
+
+long double Input::getFrictionRatio()
+{
+	return frictionRatio;
+}
+
+
+long double Input::getEarthAcceleration()
+{
+	return earthAcceleration;
+}
+
+
+long double Input::getCubeHeight()
+{
+	return cubeHeight;
+}
+
+
+long double Input::getCubeArea()
+{
+	return cubeArea;
+}
+
+
+long double Input::getVelocity()
+{
+	return velocity;
+}
+
+
+long double Input::getAngle()
+{
+	return angle;
+}
+
+
+long double Input::getDensityStream()
+{
+	return densityStream;
 }

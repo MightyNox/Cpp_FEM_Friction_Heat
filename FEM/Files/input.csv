@@ -1,13 +1,19 @@
-Initial Temperature (t0);100
-Simulation Time (tau);500
-Simulation Step Time (delta tau);50
-Ambient Temperature (t inf);1200
-Convection Ratio (alpha);300
-Grid Hight (H);0.100
-Grid Width (L);0.100
-Count Of Vertical Nodes (nH);4
-Count Of Horizontal Nodes (nL);4
-Specific Heat ( c);700
-Conduction Ratio (k);25
-Density (ro);7800
-Gauss Seidel Iterations Number;100000
+Initial Temperature (t0);20;
+Simulation Time (tau);103.6;
+Simulation Step Time (delta tau);20.72;
+Ambient Temperature (t inf);14;
+Convection Ratio (alpha);10;
+Grid Hight (H);0.100;
+Grid Width (L);0.100;
+Count Of Vertical Nodes (nH);8;
+Count Of Horizontal Nodes (nL);8;
+Specific Heat ( c);510;
+Conduction Ratio (k);25;
+Density (rho);7800;
+Gauss Seidel Iterations Number;1000;
+Friction Ratio (my);0.09;
+Acceleration Of The Earth (g);9.81;
+Cube Height (h);1;
+Cube Area (A);1;
+Velocity (v);6;21,6
+Angle (beta);30;

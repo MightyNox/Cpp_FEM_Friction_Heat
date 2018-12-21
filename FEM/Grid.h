@@ -1,5 +1,5 @@
 #pragma once
-#include "GlobalNode.h"
+#include "Node.h"
 #include "Element.h"
 #include "UniversalElement.h"
 #include "Display.h"
@@ -9,7 +9,7 @@ class Grid
 {
 	Input input;
 	Display display;
-	std::vector<GlobalNode*> nodes;
+	std::vector<Node*> nodes;
 	std::vector<Element*> elements;
 	UniversalElement universalElement;
 

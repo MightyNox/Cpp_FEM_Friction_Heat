@@ -1,7 +1,7 @@
 #include "Element.h"
 #include "Input.h"
 
-Element::Element(unsigned long int id, std::array<GlobalNode *, 4> &globalNodes, UniversalElement universalElement, Input *input)
+Element::Element(unsigned long int id, std::array<Node *, 4> &globalNodes, UniversalElement universalElement, Input *input)
 {
 	//Set element attributes
 	{
@@ -9,34 +9,16 @@ Element::Element(unsigned long int id, std::array<GlobalNode *, 4> &globalNodes,
 		this->globalNodes = globalNodes;
 	}
 
-	std::array<std::array<long double, 4>, 4> N = universalElement.getN();
-	std::array<std::array<long double, 4>, 4> NSurface = universalElement.getNSurface();
-	std::array<long double, 4> detJ;
-
-	//Convert Global Nodes Into Local Nodes
-	{
-		long double xToEta;
-		long double yToKsi;
-		for (int i = 0; i < 4; i++)
-		{
-			xToEta = 0;
-			yToKsi = 0;
-
-			for (int j = 0; j < 4; j++)
-			{
-				xToEta += N[i][j] * globalNodes[j]->getX();
-				yToKsi += N[i][j] * globalNodes[j]->getY();
-			}
-
-			localNodes[i]=(new LocalNode(xToEta, yToKsi));
-		}
-	}
-
 	long double specificHeat = input->getSpecificHeat();
 	long double density = input->getDensity();
 	long double conductionRatio = input->getConductionRatio();
 	long double convectionRatio = input->getConvectionRatio();
 	long double ambientTemperature = input->getAmbientTemperature();
+	long double densityStream = input->getDensityStream();
+
+	std::array<std::array<long double, 4>, 4> N = universalElement.getN();
+	std::array<std::array<long double, 4>, 4> NSurface = universalElement.getNSurface();
+	std::array<long double, 4> detJ;
 
 	//Calculate matrix H
 	{
@@ -118,8 +100,8 @@ Element::Element(unsigned long int id, std::array<GlobalNode *, 4> &globalNodes,
 				}
 
 				//Check if two points are on the same bound
-				bool onBound1 = globalNodes[i]->getOnBound();
-				bool onBound2 = globalNodes[j]->getOnBound();
+				bool onBound1 = globalNodes[i]->getOnBoundConvection();
+				bool onBound2 = globalNodes[j]->getOnBoundConvection();
 				if (onBound1 != true || onBound2 != true)
 				{
 					continue;
@@ -134,11 +116,8 @@ Element::Element(unsigned long int id, std::array<GlobalNode *, 4> &globalNodes,
 				//Fill the arrays
 				for (int i = 0; i < 4; i++)
 				{
-					for (int j = 0; j < 4; j++)
-					{
-						matrixN[i][j] = 0;
-						matrixNT[i][j] = 0;
-					}
+					matrixN[i].fill(0);
+					matrixNT[i].fill(0);
 				}
 
 				//Calculate matrix N
@@ -203,26 +182,37 @@ Element::Element(unsigned long int id, std::array<GlobalNode *, 4> &globalNodes,
 				j = 0;
 			}
 
-			//Check if two points are on the same bound
-			bool onBound1 = globalNodes[i]->getOnBound();
-			bool onBound2 = globalNodes[j]->getOnBound();
-			if (onBound1 != true || onBound2 != true)
+			//Check if there is convection or stream
+			if (globalNodes[i]->getOnBoundConvection() == true && globalNodes[j]->getOnBoundConvection() == true)
 			{
-				continue;
+
+				//Calculate jacobian of transformation - length of the bound - sqrt(P1^2 + P2^2)
+				long double localDetJ = 0;
+				localDetJ += (globalNodes[i]->getX() - globalNodes[j]->getX()) * (globalNodes[i]->getX() - globalNodes[j]->getX());
+				localDetJ += (globalNodes[i]->getY() - globalNodes[j]->getY()) * (globalNodes[i]->getY() - globalNodes[j]->getY());
+				localDetJ = sqrt(localDetJ) * 0.5;
+
+
+				for (int l = 0; l < 4; l++)
+				{
+					localP[i] += NSurface[i][l] * ambientTemperature*convectionRatio*localDetJ;
+					localP[j] += NSurface[i][l] * ambientTemperature*convectionRatio*localDetJ;
+				}
 			}
 
-
-			//Calculate jacobian of transformation - length of the bound - sqrt(P1^2 + P2^2)
-			long double localDetJ = 0;
-			localDetJ += (globalNodes[i]->getX() - globalNodes[j]->getX()) * (globalNodes[i]->getX() - globalNodes[j]->getX());
-			localDetJ += (globalNodes[i]->getY() - globalNodes[j]->getY()) * (globalNodes[i]->getY() - globalNodes[j]->getY());
-			localDetJ = sqrt(localDetJ) * 0.5;
-
-
-			for (int l = 0; l < 4; l++)
+			if (globalNodes[i]->getOnBoundStream() == true && globalNodes[j]->getOnBoundStream() == true)
 			{
-				localP[i] += NSurface[i][l] * ambientTemperature*convectionRatio*localDetJ;
-				localP[j] += NSurface[i][l] * ambientTemperature*convectionRatio*localDetJ;
+				//Calculate jacobian of transformation - length of the bound - sqrt(P1^2 + P2^2)
+				long double localDetJ = 0;
+				localDetJ += (globalNodes[i]->getX() - globalNodes[j]->getX()) * (globalNodes[i]->getX() - globalNodes[j]->getX());
+				localDetJ += (globalNodes[i]->getY() - globalNodes[j]->getY()) * (globalNodes[i]->getY() - globalNodes[j]->getY());
+				localDetJ = sqrt(localDetJ) * 0.5;
+
+				for (int l = 0; l < 4; l++)
+				{
+					localP[i] += NSurface[i][l] * densityStream*localDetJ;
+					localP[j] += NSurface[i][l] * densityStream*localDetJ;
+				}
 			}
 		}
 	}
@@ -231,8 +221,6 @@ Element::Element(unsigned long int id, std::array<GlobalNode *, 4> &globalNodes,
 
 Element::~Element()
 {
-	for (int i = 0; i < 4; i++)
-		delete localNodes[i];
 }
 
 
@@ -242,15 +230,9 @@ unsigned long int Element::getId()
 }
 
 
-std::array<GlobalNode *, 4> & Element::getGlobalNodes()
+std::array<Node *, 4> & Element::getGlobalNodes()
 {
 	return globalNodes;
-}
-
-
-std::array<LocalNode *, 4> & Element::getLocalNodes()
-{
-	return localNodes;
 }
 
 

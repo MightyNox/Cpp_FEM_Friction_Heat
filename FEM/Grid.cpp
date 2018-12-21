@@ -1,6 +1,6 @@
 #include "Grid.h"
 #include "Input.h"
-
+#include <iostream>
 
 Grid::Grid()
 {
@@ -13,27 +13,39 @@ Grid::Grid()
 	//Create Global Nodes
 	{
 		unsigned int id = 0;
-		bool onBound;
+		bool onBoundConvection;
+		bool onBoundStream;
 		for (unsigned long int i = 0; i < horizontalNodeNumber; i++)
 		{
 			for (unsigned long int j = 0; j < verticalNodeNumber; j++)
 			{
+				onBoundStream = false;
+				onBoundConvection = false;
+
 				//If the global node is on the left or the right edge
 				if (i == 0 || i == horizontalNodeNumber - 1)
 				{
-					onBound = true;
+					onBoundConvection = true;
+
+					if (j == 0)
+					{
+						onBoundStream = true;
+					}
 				}
 				//If the global node is neither on the left nor right edge, check if it is on top or bottom edge
-				else if (j == 0 || j == verticalNodeNumber - 1)
-				{
-					onBound = true;
-				}
 				else
 				{
-					onBound = false;
+					if (j == 0)
+					{
+						onBoundStream = true;
+					}
+					else if (j == verticalNodeNumber - 1)
+					{
+						onBoundConvection = true;
+					}
 				}
 
-				nodes.push_back(new GlobalNode(++id, i*nodeWidth, j*nodeHight, onBound, &input));
+				nodes.push_back(new Node(++id, i*nodeWidth, j*nodeHight, onBoundConvection, onBoundStream, &input));
 			}
 		}
 	}
@@ -51,7 +63,7 @@ Grid::Grid()
 				nodesId[2] = j + 1 + verticalNodeNumber * (i + 1);
 				nodesId[3] = j + 1 + verticalNodeNumber * i;
 
-				std::array<GlobalNode *, 4> elementNodes;
+				std::array<Node *, 4> elementNodes;
 				for (int k = 0; k < 4; k++)
 				{
 					elementNodes[k] = nodes[nodesId[k] - 1];
@@ -91,11 +103,11 @@ void Grid::calculate()
 	unsigned long int iterations = input.getIterationsNumber();
 	long double *tmpP = new long double[nodeCount];
 	unsigned long int iterationNumber = 0;
+	std::vector<long double> min;
+	std::vector<long double> max;
 
-	//Display
 	//display.universalElement(universalElement);
 	//display.grid(elements, nodes);
-	//display.element(elements, 1);
 
 	//Create and fill arrays
 	for (unsigned long int i = 0; i < nodeCount; i++)
@@ -173,19 +185,37 @@ void Grid::calculate()
 			//Get new temperatures
 			long double *t1 = gaussSeidel(globalH, tmpP, nodeCount, iterations);
 
+			long double tmp_min=t1[0];
+			long double tmp_max=t1[0];
+
 			//Set new temperatures
 			for (unsigned long int i = 0; i < nodeCount; i++)
 			{
+				if (tmp_min > t1[i])
+				{
+					tmp_min = t1[i];
+				}
+
+				if (tmp_max < t1[i])
+				{
+					tmp_max = t1[i];
+				}
+
 				nodes[i]->setT(t1[i]);
 			}
+
+			min.push_back(tmp_min);
+			max.push_back(tmp_max);
+
 			delete[] t1;
 		}
 
 		display.temperature(input, nodes);
-		display.H(nodeCount, globalH);
-		display.P(nodeCount, tmpP);
+		//display.H(nodeCount, globalH);
+		//display.P(nodeCount, tmpP);
 	}
 
+	display.minmax(min, max);
 
 	//Delete
 	{

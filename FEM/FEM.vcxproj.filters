@@ -30,19 +30,16 @@
     <ClCompile Include="Input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LocalNode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FileNotFoundException.cpp">
       <Filter>Exception</Filter>
-    </ClCompile>
-    <ClCompile Include="GlobalNode.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UniversalElement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Display.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -56,19 +53,16 @@
     <ClInclude Include="Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LocalNode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FileNotFoundException.h">
       <Filter>Exception</Filter>
-    </ClInclude>
-    <ClInclude Include="GlobalNode.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UniversalElement.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Display.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

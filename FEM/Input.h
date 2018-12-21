@@ -18,6 +18,15 @@ class Input
 	long double conductionRatio; //k
 	long double density; //rho
 	unsigned long int iterationsNumber;
+	long double frictionRatio; //my
+	long double earthAcceleration; //g
+	long double cubeHeight; //h
+	long double cubeArea; //A
+	long double velocity; //v
+	long double angle; //beta
+
+	long double densityStream; //q
+
 public:
 	Input();
 	~Input();
@@ -35,4 +44,12 @@ public:
 	long double getConductionRatio();
 	long double getDensity();
 	unsigned long int getIterationsNumber();
+	long double getFrictionRatio();
+	long double getEarthAcceleration();
+	long double getCubeHeight();
+	long double getCubeArea();
+	long double getVelocity();
+	long double getAngle();
+
+	long double getDensityStream();
 };
