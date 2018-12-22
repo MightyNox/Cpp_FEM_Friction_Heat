@@ -16,7 +16,7 @@ class Element
 	LocalC *localC;
 	LocalP *localP;
 public:
-	Element(unsigned long int id, std::array<Node *, 4> &globalNodes, UniversalElement universalELement, Input *input);
+	Element(unsigned long int id, std::array<Node *, 4> &globalNodes, UniversalElement *universalELement, Input *input);
 	~Element();
 
 	unsigned long int getId();

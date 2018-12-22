@@ -19,17 +19,24 @@ void Display::iteration(unsigned long int x)
 }
 
 
-void Display::temperature(Input &input, std::vector<Node*> nodes)
+void Display::temperature(Input *input, std::vector<Node*> nodes)
 {
 	std::cout << "Temperature" << std::endl;
-	for (unsigned long int i = 0; i < input.getHorizontalNodeNumber(); i++)
+	for (unsigned long int i = 0; i < input->getHorizontalNodeNumber(); i++)
 	{
-		for (unsigned long int j = 0; j < input.getVerticalNodeNumber(); j++)
-			std::cout << nodes[j + (i*input.getVerticalNodeNumber())]->getT() << "	";
+		for (unsigned long int j = 0; j < input->getVerticalNodeNumber(); j++)
+			std::cout << nodes[j + (i*input->getVerticalNodeNumber())]->getT() << "	";
 
 		std::cout << std::endl << std::endl;
 	}
 }
+
+
+void Display::velocity(Input *input)
+{
+	std::cout << "Velocity: " <<input->getVelocity()<<"m/s ---> "<<input->getVelocity()*3.6<<"km/h"<< std::endl<<std::endl;
+}
+
 
 
 void Display::H(unsigned long int nodeCount, long double **globalH)

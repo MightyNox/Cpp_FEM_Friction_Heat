@@ -1,7 +1,6 @@
 #include "Input.h"
 #include "FileNotFoundException.h"
 #include <string>
-#include <iostream>
 
 Input::Input()
 {
@@ -33,10 +32,15 @@ Input::Input()
 		getline(file, line, '\n');
 		ambientTemperature = stold(line);
 
-		//Convection Ratio
+		//Forced Convection Ratio
 		getline(file, line, ';');
 		getline(file, line, '\n');
-		convectionRatio = stold(line);
+		forcedConvectionRatio = stold(line);
+
+		//Natural Convection Ratio
+		getline(file, line, ';');
+		getline(file, line, '\n');
+		naturalConvectionRatio = stold(line);
 		
 		//Grid Hight
 		getline(file, line, ';');
@@ -88,16 +92,6 @@ Input::Input()
 		getline(file, line, '\n');
 		earthAcceleration = stold(line);
 
-		//Cube Height
-		getline(file, line, ';');
-		getline(file, line, '\n');
-		cubeHeight = stold(line);
-
-		//Cube Area
-		getline(file, line, ';');
-		getline(file, line, '\n');
-		cubeArea = stold(line);
-
 		//Velocity
 		getline(file, line, ';');
 		getline(file, line, '\n');
@@ -108,11 +102,19 @@ Input::Input()
 		getline(file, line, '\n');
 		angle = stold(line);
 
+		//PI
+		getline(file, line, ';');
+		getline(file, line, '\n');
+		PI = stold(line);
+
 		file.close();
 	}
 
-	densityStream = frictionRatio * density  * cubeHeight * earthAcceleration * velocity;
-	
+	//Calculate velocity step
+	{
+		long double acceleration = earthAcceleration * (sin(angle*PI / 180.0) - frictionRatio * cos(angle*PI / 180.0));
+		velocityStep = acceleration * simulationStepTime;
+	}
 }
 
 
@@ -145,9 +147,15 @@ long double Input::getAmbientTemperature()
 }
 
 
-long double Input::getConvectionRatio()
+long double Input::getForcedConvectionRatio()
 {
-	return convectionRatio;
+	return forcedConvectionRatio;
+}
+
+
+long double Input::getNaturalConvectionRatio()
+{
+	return naturalConvectionRatio;
 }
 
 
@@ -211,18 +219,6 @@ long double Input::getEarthAcceleration()
 }
 
 
-long double Input::getCubeHeight()
-{
-	return cubeHeight;
-}
-
-
-long double Input::getCubeArea()
-{
-	return cubeArea;
-}
-
-
 long double Input::getVelocity()
 {
 	return velocity;
@@ -238,4 +234,16 @@ long double Input::getAngle()
 long double Input::getDensityStream()
 {
 	return densityStream;
+}
+
+
+void Input::addVelocityStep()
+{
+	this->velocity += velocityStep;
+}
+
+
+void Input::caluclateDensityStream()
+{
+	densityStream = frictionRatio * density  * gridHight * earthAcceleration * velocity * cos(angle*PI / 180.0);
 }

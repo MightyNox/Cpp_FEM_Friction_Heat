@@ -11,28 +11,40 @@ Grid::Grid()
 	//Create Nodes
 	{
 		unsigned int id = 0;
-		bool onBoundConvection;
+		bool onBoundNaturalConvection;
+		bool onBoundForcedConvection;
 		bool onBoundStream;
 		long double initialTemperature = input.getInitialTemperature();
 		for (unsigned long int i = 0; i < horizontalNodeNumber; i++)
 		{
 			for (unsigned long int j = 0; j < verticalNodeNumber; j++)
 			{
+				onBoundNaturalConvection = false;
+				onBoundForcedConvection = false;
 				onBoundStream = false;
-				onBoundConvection = false;
 
-				//If the global node is on the left or the right edge
-				if (i == 0 || i == horizontalNodeNumber - 1)
+				//If the node is on the grid's left side
+				if (i == 0)
 				{
-					onBoundConvection = true;
+					onBoundNaturalConvection = true;
 
 					if (j == 0)
 					{
 						onBoundStream = true;
 					}
 				}
-				//If the global node is neither on the left nor right edge, check if it is on top or bottom edge
-				else
+				//If the node is on the grid's right side
+				else if (i == horizontalNodeNumber - 1)
+				{
+					onBoundForcedConvection = true;
+
+					if (j == 0)
+					{
+						onBoundStream = true;
+					}
+				}
+				//If the global node is neither on the left nor right grid's side, check if it is on top or bottom grid's side
+				else 
 				{
 					if (j == 0)
 					{
@@ -40,11 +52,11 @@ Grid::Grid()
 					}
 					else if (j == verticalNodeNumber - 1)
 					{
-						onBoundConvection = true;
+						onBoundNaturalConvection = true;
 					}
 				}
 
-				nodes.push_back(new Node(++id, i*nodeWidth, j*nodeHight, onBoundConvection, onBoundStream, initialTemperature));
+				nodes.push_back(new Node(++id, i*nodeWidth, j*nodeHight, onBoundNaturalConvection, onBoundForcedConvection, onBoundStream, initialTemperature));
 			}
 		}
 	}
@@ -68,7 +80,7 @@ Grid::Grid()
 					elementNodes[k] = nodes[nodesId[k] - 1];
 				}
 
-				elements.push_back(new Element(++id, elementNodes, universalElement, &input));
+				elements.push_back(new Element(++id, elementNodes, &universalElement, &input));
 			}
 		}
 	}
@@ -102,8 +114,9 @@ void Grid::calculate()
 	unsigned long int iterations = input.getIterationsNumber();
 	long double *tmpP = new long double[nodeCount];
 	unsigned long int iterationNumber = 0;
-	std::vector<long double> min;
-	std::vector<long double> max;
+
+	std::vector<long double> minTemperature;
+	std::vector<long double> maxTemperature;
 
 	//display.universalElement(universalElement);
 	//display.grid(elements, nodes);
@@ -123,27 +136,32 @@ void Grid::calculate()
 		globalP[i] = 0;
 	}
 
-	//Convert Local H, Local C, Local P into Global H, Global C, Global P
+	//Calculate and Convert Local H, Local C into Global H, Global C
 	{
+		Element *element;
+		std::array < std::array <long double, 4>, 4> localHMatrix;
+		std::array < std::array <long double, 4>, 4> localCMatrix;
+		unsigned long int id1;
+		unsigned long int id2;
 		for (unsigned long int i = 0; i < elements.size(); i++)
 		{
-			Element *element = elements[i];
-			std::array < std::array <long double, 4>, 4> localH = element->getLocalH()->getMatrix();
-			std::array < std::array <long double, 4>, 4> localC = element->getLocalC()->getMatrix();
-			std::array <long double, 4> localP = element->getLocalP()->getVector();
+			element = elements[i];
+			element->getLocalH()->calculate();
+			element->getLocalC()->calculate();
+
+			localHMatrix = element->getLocalH()->getMatrix();
+			localCMatrix = element->getLocalC()->getMatrix();
 
 			for (int j = 0; j < 4; j++)
 			{
-				unsigned long int id1 = element->getGlobalNodes()[j]->getId();
+				id1 = element->getGlobalNodes()[j]->getId();
 
 				for (int k = 0; k < 4; k++)
 				{
-					unsigned long int id2 = element->getGlobalNodes()[k]->getId();
-					globalH[id1 - 1][id2 - 1] += localH[j][k];
-					globalC[id1 - 1][id2 - 1] += localC[j][k];
+					id2 = element->getGlobalNodes()[k]->getId();
+					globalH[id1 - 1][id2 - 1] += localHMatrix[j][k];
+					globalC[id1 - 1][id2 - 1] += localCMatrix[j][k];
 				}
-
-				globalP[id1 - 1] += localP[j];
 			}
 		}
 	}
@@ -163,6 +181,36 @@ void Grid::calculate()
 	{
 		//Display current iteration number
 		display.iteration(++iterationNumber);
+		display.velocity(&input);
+
+		//In this case occurs acceleration so velocity is changing
+		input.addVelocityStep();
+		input.caluclateDensityStream();
+
+		//Calculate and Convert Local P into Global P
+		{
+			Element *element;
+			std::array <long double, 4> localPVector;
+			unsigned long int id1;
+
+			for (unsigned long int i = 0; i < nodeCount; i++)
+			{
+				globalP[i] = 0;
+			}
+
+			for (unsigned long int i = 0; i < elements.size(); i++)
+			{
+				element = elements[i];
+				element->getLocalP()->calculate();
+				localPVector = element->getLocalP()->getVector();
+
+				for (int j = 0; j < 4; j++)
+				{
+					id1 = element->getGlobalNodes()[j]->getId();
+					globalP[id1 - 1] += localPVector[j];
+				}
+			}
+		}
 
 		//Calculate {P}=([C]/deltaTau)*{t0}+{P}
 		{
@@ -203,18 +251,19 @@ void Grid::calculate()
 				nodes[i]->setT(t1[i]);
 			}
 
-			min.push_back(tmp_min);
-			max.push_back(tmp_max);
+			minTemperature.push_back(tmp_min);
+			maxTemperature.push_back(tmp_max);
 
 			delete[] t1;
 		}
 
-		display.temperature(input, nodes);
+		display.temperature(&input, nodes);
+
 		//display.H(nodeCount, globalH);
 		//display.P(nodeCount, tmpP);
 	}
 
-	display.minmax(min, max);
+	display.minmax(minTemperature, maxTemperature);
 
 	//Delete
 	{

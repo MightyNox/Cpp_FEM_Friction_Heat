@@ -2,13 +2,14 @@
 #include "Input.h"
 
 
-Node::Node(unsigned long int id, long double x, long double y, bool onBoundConvection, bool onBoundStream, long double initialTemperature)
+Node::Node(unsigned long int id, long double x, long double y, bool onBoundNaturalConvection, bool onBoundForcedConvection, bool onBoundStream, long double initialTemperature)
 {
 	this->id = id;
 	this->x = x;
 	this->y = y;
 	this->t = initialTemperature;
-	this->onBoundConvection = onBoundConvection;
+	this->onBoundNaturalConvection = onBoundNaturalConvection;
+	this->onBoundForcedConvection = onBoundForcedConvection;
 	this->onBoundStream = onBoundStream;
 }
 
@@ -42,9 +43,15 @@ long double Node::getT()
 }
 
 
-bool Node::getOnBoundConvection()
+bool Node::getOnBoundNaturalConvection()
 {
-	return onBoundConvection;
+	return onBoundNaturalConvection;
+}
+
+
+bool Node::getOnBoundForcedConvection()
+{
+	return onBoundForcedConvection;
 }
 
 

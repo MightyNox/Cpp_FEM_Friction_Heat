@@ -9,7 +9,8 @@ class Input
 	long double simulationTime; //tau
 	long double simulationStepTime; //delta tau
 	long double ambientTemperature; //tInf
-	long double convectionRatio; //alpha
+	long double forcedConvectionRatio; //alphaF
+	long double naturalConvectionRatio; //alphaN
 	long double gridHight; //H
 	long double gridWidth; //L
 	unsigned long int verticalNodeNumber; //nH
@@ -20,11 +21,10 @@ class Input
 	unsigned long int iterationsNumber;
 	long double frictionRatio; //my
 	long double earthAcceleration; //g
-	long double cubeHeight; //h
-	long double cubeArea; //A
 	long double velocity; //v
+	long double velocityStep;
 	long double angle; //beta
-
+	long double PI;
 	long double densityStream; //q
 
 public:
@@ -35,7 +35,8 @@ public:
 	long double getSimulationTime();
 	long double getSimulationStepTime();
 	long double getAmbientTemperature();
-	long double getConvectionRatio();
+	long double getForcedConvectionRatio();
+	long double getNaturalConvectionRatio();
 	long double getGridHight();
 	long double getGridWidth();
 	unsigned long int getVerticalNodeNumber();
@@ -46,10 +47,10 @@ public:
 	unsigned long int getIterationsNumber();
 	long double getFrictionRatio();
 	long double getEarthAcceleration();
-	long double getCubeHeight();
-	long double getCubeArea();
 	long double getVelocity();
 	long double getAngle();
-
 	long double getDensityStream();
+
+	void addVelocityStep();
+	void caluclateDensityStream();
 };

@@ -2,11 +2,20 @@
 
 
 
-LocalP::LocalP(std::array <Node *, 4> globalNodes, UniversalElement &universalElement, Input *input)
+LocalP::LocalP(std::array <Node *, 4> globalNodes, UniversalElement *universalElement, Input *input)
 {
-	std::array<std::array<long double, 4>, 4> NSurface = universalElement.getNSurface();
+	this->globalNodes = globalNodes;
+	this->universalElement = universalElement;
+	this->input = input;
+}
+
+
+void LocalP::calculate()
+{
+	std::array<std::array<long double, 4>, 4> NSurface = universalElement->getNSurface();
 	long double ambientTemperature = input->getAmbientTemperature();
-	long double convectionRatio = input->getConvectionRatio();
+	long double naturalConvectionRatio = input->getNaturalConvectionRatio();
+	long double forcedConvectionRatio = input->getForcedConvectionRatio();
 	long double densityStream = input->getDensityStream();
 	int j;
 
@@ -22,8 +31,8 @@ LocalP::LocalP(std::array <Node *, 4> globalNodes, UniversalElement &universalEl
 			j = 0;
 		}
 
-		//Check if there is convection or stream
-		if (globalNodes[i]->getOnBoundConvection() == true && globalNodes[j]->getOnBoundConvection() == true)
+		//Check if there is natural convection
+		if (globalNodes[i]->getOnBoundNaturalConvection() && globalNodes[j]->getOnBoundNaturalConvection() )
 		{
 
 			//Calculate jacobian of transformation - length of the bound - sqrt(P1^2 + P2^2)
@@ -35,12 +44,31 @@ LocalP::LocalP(std::array <Node *, 4> globalNodes, UniversalElement &universalEl
 
 			for (int l = 0; l < 4; l++)
 			{
-				vector[i] += NSurface[i][l] * ambientTemperature*convectionRatio*localDetJ;
-				vector[j] += NSurface[i][l] * ambientTemperature*convectionRatio*localDetJ;
+				vector[i] += NSurface[i][l] * ambientTemperature*naturalConvectionRatio*localDetJ;
+				vector[j] += NSurface[i][l] * ambientTemperature*naturalConvectionRatio*localDetJ;
 			}
 		}
 
-		if (globalNodes[i]->getOnBoundStream() == true && globalNodes[j]->getOnBoundStream() == true)
+		//Check if there is forced convection
+		if (globalNodes[i]->getOnBoundForcedConvection() && globalNodes[j]->getOnBoundForcedConvection())
+		{
+
+			//Calculate jacobian of transformation - length of the bound - sqrt(P1^2 + P2^2)
+			long double localDetJ = 0;
+			localDetJ += (globalNodes[i]->getX() - globalNodes[j]->getX()) * (globalNodes[i]->getX() - globalNodes[j]->getX());
+			localDetJ += (globalNodes[i]->getY() - globalNodes[j]->getY()) * (globalNodes[i]->getY() - globalNodes[j]->getY());
+			localDetJ = sqrt(localDetJ) * 0.5;
+
+
+			for (int l = 0; l < 4; l++)
+			{
+				vector[i] += NSurface[i][l] * ambientTemperature*forcedConvectionRatio*localDetJ;
+				vector[j] += NSurface[i][l] * ambientTemperature*forcedConvectionRatio*localDetJ;
+			}
+		}
+
+		//Check if there is stream
+		if (globalNodes[i]->getOnBoundStream()  && globalNodes[j]->getOnBoundStream() )
 		{
 			//Calculate jacobian of transformation - length of the bound - sqrt(P1^2 + P2^2)
 			long double localDetJ = 0;

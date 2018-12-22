@@ -2,11 +2,24 @@
 
 
 
-LocalC::LocalC(std::array <Node *, 4> globalNodes, UniversalElement &universalElement, Input *input)
+LocalC::LocalC(std::array <Node *, 4> globalNodes, UniversalElement *universalElement, Input *input)
 {
-	std::array<std::array<long double, 4>, 4> N = universalElement.getN();
-	std::array<std::array<long double, 4>, 4> dNdKsi = universalElement.getdNdKsi();
-	std::array<std::array<long double, 4>, 4> dNdEta = universalElement.getdNdEta();
+	this->globalNodes = globalNodes;
+	this->universalElement = universalElement;
+	this->input = input;
+}
+
+
+LocalC::~LocalC()
+{
+}
+
+
+void LocalC::calculate()
+{
+	std::array<std::array<long double, 4>, 4> N = universalElement->getN();
+	std::array<std::array<long double, 4>, 4> dNdKsi = universalElement->getdNdKsi();
+	std::array<std::array<long double, 4>, 4> dNdEta = universalElement->getdNdEta();
 	long double density = input->getDensity();
 	long double specificHeat = input->getSpecificHeat();
 
@@ -40,11 +53,6 @@ LocalC::LocalC(std::array <Node *, 4> globalNodes, UniversalElement &universalEl
 			}
 		}
 	}
-}
-
-
-LocalC::~LocalC()
-{
 }
 
 

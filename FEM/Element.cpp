@@ -1,7 +1,7 @@
 #include "Element.h"
 #include "Input.h"
 
-Element::Element(unsigned long int id, std::array<Node *, 4> &globalNodes, UniversalElement universalElement, Input *input)
+Element::Element(unsigned long int id, std::array<Node *, 4> &globalNodes, UniversalElement *universalElement, Input *input)
 {
 	//Set element attributes
 	{
@@ -9,17 +9,17 @@ Element::Element(unsigned long int id, std::array<Node *, 4> &globalNodes, Unive
 		this->globalNodes = globalNodes;
 	}
 
-	//Calculate local matrix H
+	//Create local matrix H oject
 	{
 		localH = new LocalH(globalNodes, universalElement, input);
 	}
-	
-	//Calculate local matrix C
+
+	//Create local matrix C oject
 	{
 		localC = new LocalC(globalNodes, universalElement, input);
 	}
 
-	//Calculate local vector P
+	//Create local vector P oject
 	{
 		localP = new LocalP(globalNodes, universalElement, input);
 	}
@@ -30,6 +30,7 @@ Element::~Element()
 {
 	delete localH;
 	delete localC;
+	delete localP;
 }
 
 

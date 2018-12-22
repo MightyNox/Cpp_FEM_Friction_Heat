@@ -12,7 +12,8 @@ public:
 	~Display();
 
 	void iteration(unsigned long int x);
-	void temperature(Input &input, std::vector<Node*> nodes);
+	void temperature(Input *input, std::vector<Node*> nodes);
+	void velocity(Input *input);
 	void H(unsigned long int nodeCount, long double **globalH);
 	void P(unsigned long int nodeCount, long double *globalP);
 	void grid(std::vector<Element*> elements, std::vector<Node*> nodes);
