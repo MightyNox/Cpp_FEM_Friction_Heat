@@ -1,20 +1,19 @@
 #include "Grid.h"
 #include "Input.h"
-#include <iostream>
 
 Grid::Grid()
 {
-	//Load Input
 	unsigned long int verticalNodeNumber = input.getVerticalNodeNumber();
 	unsigned long int horizontalNodeNumber = input.getHorizontalNodeNumber();
 	long double nodeHight = input.getGridHight()/ (verticalNodeNumber -1);
 	long double nodeWidth = input.getGridWidth() / (horizontalNodeNumber -1);
 
-	//Create Global Nodes
+	//Create Nodes
 	{
 		unsigned int id = 0;
 		bool onBoundConvection;
 		bool onBoundStream;
+		long double initialTemperature = input.getInitialTemperature();
 		for (unsigned long int i = 0; i < horizontalNodeNumber; i++)
 		{
 			for (unsigned long int j = 0; j < verticalNodeNumber; j++)
@@ -45,7 +44,7 @@ Grid::Grid()
 					}
 				}
 
-				nodes.push_back(new Node(++id, i*nodeWidth, j*nodeHight, onBoundConvection, onBoundStream, &input));
+				nodes.push_back(new Node(++id, i*nodeWidth, j*nodeHight, onBoundConvection, onBoundStream, initialTemperature));
 			}
 		}
 	}
@@ -57,7 +56,7 @@ Grid::Grid()
 		{
 			for (unsigned long int j = 1; j < verticalNodeNumber; j++)
 			{
-				int nodesId[4];
+				std::array<int, 4> nodesId;
 				nodesId[0] = j + verticalNodeNumber * i;
 				nodesId[1] = j + verticalNodeNumber * (i + 1);
 				nodesId[2] = j + 1 + verticalNodeNumber * (i + 1);
@@ -129,9 +128,9 @@ void Grid::calculate()
 		for (unsigned long int i = 0; i < elements.size(); i++)
 		{
 			Element *element = elements[i];
-			std::array < std::array <long double, 4>, 4> localH = element->getLocalH();
-			std::array < std::array <long double, 4>, 4> localC = element->getLocalC();
-			std::array <long double, 4> localP = element->getLocalP();
+			std::array < std::array <long double, 4>, 4> localH = element->getLocalH()->getMatrix();
+			std::array < std::array <long double, 4>, 4> localC = element->getLocalC()->getMatrix();
+			std::array <long double, 4> localP = element->getLocalP()->getVector();
 
 			for (int j = 0; j < 4; j++)
 			{
@@ -183,7 +182,7 @@ void Grid::calculate()
 		//Calculate {t1} by Gauss Elimination - [H]{t1}={P}
 		{
 			//Get new temperatures
-			long double *t1 = gaussSeidel(globalH, tmpP, nodeCount, iterations);
+			long double *t1 = equationSolver.gaussSeidel(globalH, tmpP, nodeCount, iterations);
 
 			long double tmp_min=t1[0];
 			long double tmp_max=t1[0];
@@ -230,69 +229,4 @@ void Grid::calculate()
 		delete[] globalP;
 		delete[] tmpP;
 	}
-}
-
-
-long double * Grid::gaussSeidel(long double **A, long double *B, unsigned long int n, unsigned long int iterations)
-{
-	long double **M, *N, *x, *result;
-
-	//Create arrays
-	{
-		N = new long double[n];
-
-		M = new long double*[n];
-
-		x = new long double[n];
-
-		result = new long double[n];
-
-		for (unsigned long int i = 0; i < n; i++)
-		{
-			M[i] = new long double[n];
-			x[i] = 0;
-		}
-	}
-
-	//Calculate matrix N
-	for (unsigned long int i = 0; i < n; i++)
-	{
-		N[i] = 1 / A[i][i];
-	}
-
-	//Calculate matrix M
-	for (unsigned long int i = 0; i < n; i++)
-	{
-		for (unsigned long int j = 0; j < n; j++)
-		{
-			if (i == j)
-				M[i][j] = 0;
-			else
-				M[i][j] = -(A[i][j] * N[i]);
-		}
-	}
-
-	//Calculate results
-	for (unsigned long int k = 0; k < iterations; k++)
-	{
-		for (unsigned long int i = 0; i < n; i++)
-		{
-			result[i] = N[i] * B[i];
-			for (unsigned long int j = 0; j < n; j++)
-				result[i] += M[i][j] * x[j];
-
-			x[i] = result[i];
-		}
-	}
-
-	//Delete arrays
-	{
-		for (unsigned long int i = 0; i < n; i++)
-			delete[] M[i];
-		delete[] N;
-		delete[] M;
-		delete[] x;
-	}
-
-	return result;
 }

@@ -3,6 +3,7 @@
 #include "Element.h"
 #include "UniversalElement.h"
 #include "Display.h"
+#include "EquationSolver.h"
 #include <vector>
 
 class Grid
@@ -12,7 +13,7 @@ class Grid
 	std::vector<Node*> nodes;
 	std::vector<Element*> elements;
 	UniversalElement universalElement;
-
+	EquationSolver equationSolver;
 public:
 	Grid();
 	~Grid();

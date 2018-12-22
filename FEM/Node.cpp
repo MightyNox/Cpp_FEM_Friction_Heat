@@ -2,12 +2,12 @@
 #include "Input.h"
 
 
-Node::Node(unsigned long int id, long double x, long double y, bool onBoundConvection, bool onBoundStream, Input *input)
+Node::Node(unsigned long int id, long double x, long double y, bool onBoundConvection, bool onBoundStream, long double initialTemperature)
 {
 	this->id = id;
 	this->x = x;
 	this->y = y;
-	this->t = input->getInitialTemperature();
+	this->t = initialTemperature;
 	this->onBoundConvection = onBoundConvection;
 	this->onBoundStream = onBoundStream;
 }

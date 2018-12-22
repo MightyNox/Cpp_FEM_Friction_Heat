@@ -117,9 +117,13 @@
   <ItemGroup>
     <ClCompile Include="Display.cpp" />
     <ClCompile Include="Element.cpp" />
+    <ClCompile Include="EquationSolver.cpp" />
     <ClCompile Include="FileNotFoundException.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="LocalC.cpp" />
+    <ClCompile Include="LocalH.cpp" />
+    <ClCompile Include="LocalP.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="UniversalElement.cpp" />
     <ClCompile Include="Source.cpp" />
@@ -127,9 +131,13 @@
   <ItemGroup>
     <ClInclude Include="Display.h" />
     <ClInclude Include="Element.h" />
+    <ClInclude Include="EquationSolver.h" />
     <ClInclude Include="FileNotFoundException.h" />
     <ClInclude Include="Grid.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="LocalC.h" />
+    <ClInclude Include="LocalH.h" />
+    <ClInclude Include="LocalP.h" />
     <ClInclude Include="Node.h" />
     <ClInclude Include="UniversalElement.h" />
   </ItemGroup>
