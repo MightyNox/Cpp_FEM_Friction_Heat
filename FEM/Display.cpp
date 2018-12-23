@@ -34,7 +34,7 @@ void Display::temperature(Input *input, std::vector<Node*> nodes)
 
 void Display::velocity(Input *input)
 {
-	std::cout << "Velocity: " <<input->getVelocity()<<"m/s ---> "<<input->getVelocity()*3.6<<"km/h"<< std::endl<<std::endl;
+	std::cout << "Velocity: " <<input->getVelocity()<<" m/s ---> "<<input->getVelocity()*3.6<<" km/h"<< std::endl<<std::endl;
 }
 
 

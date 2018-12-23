@@ -22,10 +22,10 @@ class Input
 	long double frictionRatio; //my
 	long double earthAcceleration; //g
 	long double velocity; //v
-	long double velocityStep;
 	long double angle; //beta
 	long double PI;
 	long double densityStream; //q
+	long double basicAcceleration; //a
 
 public:
 	Input();

@@ -110,11 +110,7 @@ Input::Input()
 		file.close();
 	}
 
-	//Calculate velocity step
-	{
-		long double acceleration = earthAcceleration * (sin(angle*PI / 180.0) - frictionRatio * cos(angle*PI / 180.0));
-		velocityStep = acceleration * simulationStepTime;
-	}
+	basicAcceleration = earthAcceleration * (sin(angle*PI / 180.0) - frictionRatio * cos(angle*PI / 180.0));
 }
 
 
@@ -239,7 +235,14 @@ long double Input::getDensityStream()
 
 void Input::addVelocityStep()
 {
-	this->velocity += velocityStep;
+	long double velocityStep;
+	long double resistAcceleration;
+	for (int i = 0; i < 1000; i++)
+	{
+		resistAcceleration = 1.05 *velocity*velocity*0.5 / gridWidth;
+		velocityStep = (basicAcceleration - resistAcceleration)*simulationStepTime / 1000;
+		velocity += velocityStep;
+	}
 }
 
 

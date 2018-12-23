@@ -1,5 +1,7 @@
 #include "Grid.h"
 #include "Input.h"
+#include <fstream>
+#include <string>
 
 Grid::Grid()
 {
@@ -257,7 +259,20 @@ void Grid::calculate()
 			delete[] t1;
 		}
 
-		display.temperature(&input, nodes);
+		//Save {t1} into file.csv
+		{
+			std::fstream file("Output/" + std::to_string(iterationNumber) + ".csv", std::ios::out);
+			for (unsigned long int i = 0; i < input.getHorizontalNodeNumber(); i++)
+			{
+				for (unsigned long int j = 0; j < input.getVerticalNodeNumber(); j++)
+					file << nodes[j + (i*input.getVerticalNodeNumber())]->getT() << "	";
+
+				file << std::endl;
+			}
+			file.close();
+		}
+
+		//display.temperature(&input, nodes);
 
 		//display.H(nodeCount, globalH);
 		//display.P(nodeCount, tmpP);
