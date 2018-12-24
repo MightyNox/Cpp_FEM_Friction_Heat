@@ -22,10 +22,10 @@ void Display::iteration(unsigned long int x)
 void Display::temperature(Input *input, std::vector<Node*> nodes)
 {
 	std::cout << "Temperature" << std::endl;
-	for (unsigned long int i = 0; i < input->getHorizontalNodeNumber(); i++)
+	for (unsigned long int j = input->getVerticalNodeNumber(); j > 0; j--)
 	{
-		for (unsigned long int j = 0; j < input->getVerticalNodeNumber(); j++)
-			std::cout << nodes[j + (i*input->getVerticalNodeNumber())]->getT() << "	";
+		for (unsigned long int i = 0; i < input->getHorizontalNodeNumber(); i++)
+			std::cout << nodes[j - 1 + (i*input->getVerticalNodeNumber())]->getT() << "	";
 
 		std::cout << std::endl << std::endl;
 	}

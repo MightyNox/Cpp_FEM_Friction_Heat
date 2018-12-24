@@ -262,10 +262,12 @@ void Grid::calculate()
 		//Save {t1} into file.csv
 		{
 			std::fstream file("Output/" + std::to_string(iterationNumber) + ".csv", std::ios::out);
-			for (unsigned long int i = 0; i < input.getHorizontalNodeNumber(); i++)
+			for (unsigned long int j = input.getVerticalNodeNumber(); j > 0; j--)
 			{
-				for (unsigned long int j = 0; j < input.getVerticalNodeNumber(); j++)
-					file << nodes[j + (i*input.getVerticalNodeNumber())]->getT() << "	";
+				for (unsigned long int i = 0; i < input.getHorizontalNodeNumber(); i++)
+				{
+					file << nodes[j-1 + (i*input.getVerticalNodeNumber())]->getT() << ';';
+				}
 
 				file << std::endl;
 			}
